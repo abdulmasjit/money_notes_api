@@ -1,0 +1,38 @@
+{
+  "name": "money-note-api",
+  "version": "1.0.0",
+  "description": "Simple REST API for money note app authentication and user management",
+  "main": "server.js",
+  "scripts": {
+    "start": "node swagger.js && node server.js",
+    "dev": "nodemon -e js,json --exec \"node swagger.js && node server.js\""
+  },
+  "keywords": [
+    "express",
+    "jwt",
+    "api",
+    "swagger",
+    "crud"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "swagger-autogen": "^2.9.2",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  },
+  "nodemonConfig": {
+    "ignore": [
+      "swagger-output.json",
+      "users.json",
+      "database/*",
+      ".npm_cache/*"
+    ]
+  }
+}

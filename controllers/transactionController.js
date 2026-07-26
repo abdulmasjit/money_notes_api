@@ -8,15 +8,19 @@ async function syncTransactionsBulk(req, res) {
         in: 'body',
         description: 'Daftar transaksi yang disinkronkan dari aplikasi offline',
         required: true,
-        schema: [
-          {
-            id: 1,
-            tanggal: '2026-07-25 16:08:00',
-            nominal: 2500000,
-            keterangan: 'Uang Saku Bulanan',
-            jenis: 'Pemasukan'
-          }
-        ]
+        schema: {
+          start_date: '2026-07-25',
+          end_date: '2026-07-25',
+          transactions: [
+            {
+              id: 1,
+              tanggal: '2026-07-25 16:08:00',
+              nominal: 2500000,
+              keterangan: 'Uang Saku Bulanan',
+              jenis: 'Pemasukan'
+            }
+          ]
+        }
   } */
   try {
     let incomingItems = [];
@@ -31,15 +35,47 @@ async function syncTransactionsBulk(req, res) {
       });
     }
 
-    if (incomingItems.length === 0) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Tidak ada data transaksi yang dikirim'
+    let currentTransactions = readTransactions();
+    const nowFormatted = formatDateTime(new Date());
+
+    // Cek parameter start_date & end_date untuk scoped auto-delete
+    const startDateParam = (req.body && req.body.start_date) || req.query.start_date;
+    const endDateParam = (req.body && req.body.end_date) || req.query.end_date;
+
+    const incomingIds = incomingItems
+      .map(item => Number(item.id))
+      .filter(id => !isNaN(id));
+
+    // Jika scope tanggal dikirim oleh Flutter, hapus data di server yang berada dalam rentang tanggal tersebut TETAPI tidak ada lagi di incomingIds
+    if (startDateParam || endDateParam) {
+      const startDateObj = startDateParam ? parseToDate(String(startDateParam).trim()) : null;
+      const endDateObj = endDateParam ? parseToDate(String(endDateParam).trim()) : null;
+
+      const startTime = startDateObj
+        ? (String(startDateParam).trim().length === 10
+            ? new Date(`${String(startDateParam).trim()}T00:00:00`).getTime()
+            : startDateObj.getTime())
+        : -Infinity;
+
+      const endTime = endDateObj
+        ? (String(endDateParam).trim().length === 10
+            ? new Date(`${String(endDateParam).trim()}T23:59:59.999`).getTime()
+            : endDateObj.getTime())
+        : Infinity;
+
+      currentTransactions = currentTransactions.filter(t => {
+        const itemDate = parseToDate(t.tanggal);
+        const itemTime = itemDate ? itemDate.getTime() : 0;
+        const inScope = itemTime >= startTime && itemTime <= endTime;
+
+        if (inScope) {
+          // Hanya pertahankan jika ID-nya dikirim oleh Flutter (terdapat di incomingIds)
+          return incomingIds.includes(Number(t.id));
+        }
+        // Di luar scope tanggal -> pertahankan (jangan dihapus)
+        return true;
       });
     }
-
-    const currentTransactions = readTransactions();
-    const nowFormatted = formatDateTime(new Date());
 
     const syncedItems = [];
 
@@ -94,6 +130,7 @@ async function syncTransactionsBulk(req, res) {
     res.status(200).json({
       status: 'success',
       message: 'Sinkronisasi data transaksi berhasil',
+      total_synced: syncedItems.length,
       data: syncedItems
     });
   } catch (err) {
@@ -154,6 +191,15 @@ async function getAllTransactions(req, res) {
         });
       }
     }
+
+    // Sort transactions by date descending (transaksi terbaru di atas)
+    transactions.sort((a, b) => {
+      const dateA = parseToDate(a.tanggal);
+      const dateB = parseToDate(b.tanggal);
+      const timeA = dateA ? dateA.getTime() : 0;
+      const timeB = dateB ? dateB.getTime() : 0;
+      return timeB - timeA;
+    });
 
     res.json({
       status: 'success',

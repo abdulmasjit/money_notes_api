@@ -6,13 +6,5 @@
     "email": "budi@gmail.com",
     "password": "$2a$10$fDcrnkmUCDxEbl0wp/b8kuhVoeZZigh9o8tLiF74Tus9OrH9MGwBi",
     "created_at": "2026-07-18T03:26:15.694Z"
-  },
-  {
-    "id": 1785152575967,
-    "name": "Bambang",
-    "username": "bambang",
-    "email": "bambang@gmail.com",
-    "password": "$2a$10$TO.eH26oEgX1hsv3EO3Wx.vmkBGm/FbUlbM0mBdQhx5SC1WxJ5CYa",
-    "created_at": "2026-07-27T11:42:55.967Z"
   }
 ]

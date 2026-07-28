@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "id": 3,
+    "tanggal": "2026-07-25 17:19:17",
+    "nominal": 2000000,
+    "keterangan": "Uang saku bulanan",
+    "jenis": "pemasukan",
+    "synced_at": "2026-07-26 15:31:34"
+  },
+  {
+    "id": 1,
+    "tanggal": "2026-07-21 19:00:04",
+    "nominal": 10000,
+    "keterangan": "Beli Makan",
+    "jenis": "pengeluaran",
+    "synced_at": "2026-07-26 15:31:34"
+  }
+]

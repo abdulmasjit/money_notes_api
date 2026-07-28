@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
+const morgan = require('morgan');
 const path = require('path');
+const os = require('os');
 const swaggerUi = require('swagger-ui-express');
 const apiRoutes = require('./routes/apiRoutes');
 
@@ -14,20 +16,67 @@ try {
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || '0.0.0.0';
 
-app.use(cors());
+// CORS configuration
+const corsOptions = {
+  origin: '*', // Allow all origins for mobile / web clients
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  credentials: true
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
-// Setup Swagger UI
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+// HTTP Request Logger Middleware using morgan ('dev' format)
+app.use(morgan('dev'));
+
+
+// Setup Swagger UI with dynamic host support matching incoming requests
+app.use('/api-docs', (req, res, next) => {
+  if (swaggerDocument && req.get('host')) {
+    swaggerDocument.host = req.get('host');
+  }
+  next();
+}, swaggerUi.serve, (req, res) => {
+  swaggerUi.setup(swaggerDocument)(req, res);
+});
 
 // Routes
 app.use('/api', apiRoutes);
 
+// Helper function to get local IPv4 addresses
+function getLocalIpAddresses() {
+  const interfaces = os.networkInterfaces();
+  const addresses = [];
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        addresses.push(iface.address);
+      }
+    }
+  }
+  return addresses;
+}
+
 // Start Server
-app.listen(PORT, () => {
+app.listen(PORT, HOST, () => {
+  const localIps = getLocalIpAddresses();
   console.log(`========================================================`);
-  console.log(`Server running on http://localhost:${PORT}`);
-  console.log(`Swagger documentation: http://localhost:${PORT}/api-docs`);
+  console.log(`Server running on:`);
+  console.log(`  - Local:   http://localhost:${PORT}`);
+  if (process.env.HOST && process.env.HOST !== 'localhost' && process.env.HOST !== '0.0.0.0') {
+    console.log(`  - Config:  http://${process.env.HOST}:${PORT}`);
+  }
+  localIps.forEach(ip => {
+    console.log(`  - Network: http://${ip}:${PORT}`);
+  });
+  console.log(`\nSwagger documentation:`);
+  console.log(`  - Local:   http://localhost:${PORT}/api-docs`);
+  localIps.forEach(ip => {
+    console.log(`  - Network: http://${ip}:${PORT}/api-docs`);
+  });
   console.log(`========================================================`);
 });
+

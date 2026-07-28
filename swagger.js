@@ -1,4 +1,21 @@
+const os = require('os');
 const swaggerAutogen = require('swagger-autogen')();
+
+// Helper to get local IP address
+const getLocalIp = () => {
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        return iface.address;
+      }
+    }
+  }
+  return 'localhost';
+};
+
+const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || process.env.SWAGGER_HOST || getLocalIp();
 
 const doc = {
   info: {
@@ -6,7 +23,7 @@ const doc = {
     description: 'API sederhana untuk registrasi, login dan sinkronisasi data transaksi catatan keuangan (Money Note).',
     version: '1.0.0'
   },
-  host: 'localhost:3000',
+  host: `${HOST}:${PORT}`,
   basePath: '/api',
   schemes: ['http'],
   definitions: {
@@ -31,3 +48,4 @@ const outputFile = './swagger-output.json';
 const endpointsFiles = ['./routes/apiRoutes.js'];
 
 swaggerAutogen(outputFile, endpointsFiles, doc);
+

@@ -1,5 +1,7 @@
+require('dotenv').config();
 const os = require('os');
 const swaggerAutogen = require('swagger-autogen')();
+
 
 // Helper to get local IP address
 const getLocalIp = () => {
@@ -15,7 +17,12 @@ const getLocalIp = () => {
 };
 
 const PORT = process.env.PORT || 3000;
-const HOST = process.env.HOST || process.env.SWAGGER_HOST || getLocalIp();
+let HOST = process.env.SWAGGER_HOST || process.env.HOST;
+
+// If HOST is not specified or set to 0.0.0.0 (bind address), resolve to network IP address
+if (!HOST || HOST === '0.0.0.0') {
+  HOST = getLocalIp();
+}
 
 const doc = {
   info: {

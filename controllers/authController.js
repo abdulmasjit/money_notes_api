@@ -2,7 +2,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { readUsers, writeUsers } = require('../config/db');
 
-const JWT_SECRET = 'supersecretkeyformoneyapp';
+const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkeyformoneyapp';
+
 
 async function registerUser(req, res) {
   // #swagger.tags = ['Auth']
